@@ -1,0 +1,40 @@
+{
+  "name": "assert",
+  "version": "1.0.0",
+  "description": "Evaluate an assertion against the current browser state.",
+  "parameters": {
+    "type": "object",
+    "required": ["assertion", "context"],
+    "properties": {
+      "assertion": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["url-contains", "title-equals", "element-visible", "element-text", "element-count", "attribute-equals"],
+            "description": "Type of assertion to evaluate"
+          },
+          "selector": { "type": "string", "description": "CSS selector (required for element assertions)" },
+          "expected": { "type": "string", "description": "Expected value" },
+          "count": { "type": "number", "description": "Expected element count (for element-count)" },
+          "attribute": { "type": "string", "description": "Attribute name (for attribute-equals)" },
+          "continueOnFail": { "type": "boolean", "default": false }
+        }
+      },
+      "context": {
+        "type": "object",
+        "description": "Current browser context"
+      }
+    }
+  },
+  "returns": {
+    "type": "object",
+    "properties": {
+      "passed": { "type": "boolean" },
+      "actual": { "type": "string", "description": "Actual value observed" },
+      "expected": { "type": "string" },
+      "message": { "type": "string" }
+    }
+  }
+}

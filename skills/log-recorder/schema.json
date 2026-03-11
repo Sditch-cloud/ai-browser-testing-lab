@@ -1,0 +1,41 @@
+{
+  "name": "log-recorder",
+  "version": "1.0.0",
+  "description": "Record a structured log entry for a skill invocation or lifecycle event.",
+  "parameters": {
+    "type": "object",
+    "required": ["event", "status"],
+    "properties": {
+      "event": {
+        "type": "string",
+        "description": "Name of the skill or event being logged (e.g. 'browser-action:click')"
+      },
+      "status": {
+        "type": "string",
+        "enum": ["pass", "fail", "skip", "info"],
+        "description": "Outcome of the event"
+      },
+      "detail": {
+        "type": "string",
+        "description": "Human-readable message describing what happened"
+      },
+      "data": {
+        "type": "object",
+        "description": "Optional structured data to attach to the log entry"
+      },
+      "timestamp": {
+        "type": "string",
+        "description": "ISO-8601 timestamp; defaults to now if omitted"
+      }
+    }
+  },
+  "returns": {
+    "type": "object",
+    "properties": {
+      "logEntry": {
+        "type": "object",
+        "description": "The persisted log entry that was recorded"
+      }
+    }
+  }
+}
