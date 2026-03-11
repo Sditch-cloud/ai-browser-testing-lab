@@ -16,7 +16,27 @@
             "enum": ["navigate", "click", "fill", "select", "hover", "screenshot", "wait"],
             "description": "The browser action to perform"
           },
-          "selector": { "type": "string", "description": "CSS or text selector" },
+          "selector": { "type": "string", "description": "CSS selector" },
+          "testId": { "type": "string", "description": "Stable data-testid value" },
+          "label": { "type": "string", "description": "Associated form label text" },
+          "role": { "type": "string", "description": "ARIA role for role-based lookup" },
+          "name": { "type": "string", "description": "Accessible name for role-based lookup" },
+          "text": { "type": "string", "description": "Visible text to locate" },
+          "placeholder": { "type": "string", "description": "Placeholder text to locate" },
+          "target": { "type": "string", "description": "Natural-language target description for locator resolution" },
+          "locator": {
+            "type": "object",
+            "description": "Optional structured locator object",
+            "properties": {
+              "selector": { "type": "string" },
+              "testId": { "type": "string" },
+              "label": { "type": "string" },
+              "role": { "type": "string" },
+              "name": { "type": "string" },
+              "text": { "type": "string" },
+              "placeholder": { "type": "string" }
+            }
+          },
           "value": { "type": "string", "description": "Value for fill/select actions" },
           "url": { "type": "string", "description": "URL for navigate action" },
           "timeout": { "type": "number", "description": "Timeout in milliseconds", "default": 30000 },

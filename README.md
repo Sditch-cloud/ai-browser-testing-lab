@@ -1,6 +1,6 @@
 # AI Browser Testing Lab
 
-An AI-driven browser testing project orchestrated entirely by **GitHub Copilot Agent** using **Skills**, **Hooks**, and **Rules** — no fixed test-runner script.
+An AI-driven browser testing project orchestrated entirely by **GitHub Copilot Agent** using **Skills**, **Hooks**, and **Rules** - no fixed test-runner script.
 
 ---
 
@@ -14,15 +14,16 @@ Instead of a traditional CI script that runs tests in sequence, this lab defines
 
 Copilot Agent then:
 
-1. Searches `tests/cases/` for `login.yaml` → invokes **parse-testcase** skill
-2. Fires the **before-test** hook → launches a Playwright browser
-3. Iterates over each step → invokes **browser-action** skill
-4. After each step → invokes **assert** skill for any associated assertions
-5. After each skill call → invokes **log-recorder** skill to accumulate results
-6. On any error → fires the **on-error** hook (screenshot + decide abort/continue)
-7. Fires the **after-test** hook → closes the browser
-8. Invokes **report-generator** → writes `reports/<name>-<timestamp>.html` and `.json`
-9. Replies to the user with a ✅/❌ summary and the report file path
+1. Searches `tests/cases/` for `login.yaml` -> invokes **parse-testcase** skill
+2. Fires the **before-test** hook -> launches a Playwright browser
+3. Resolves selector-free steps and assertions with **resolve-locator** when needed
+4. Iterates over each step -> invokes **browser-action** skill
+5. After each step -> invokes **assert** skill for any associated assertions
+6. After each skill call -> invokes **log-recorder** skill to accumulate results
+7. On any error -> fires the **on-error** hook (screenshot + decide abort/continue)
+8. Fires the **after-test** hook -> closes the browser
+9. Invokes **report-generator** -> writes `reports/<name>-<timestamp>.html` and `.json`
+10. Replies to the user with a pass/fail summary and the report file path
 
 ---
 
@@ -37,6 +38,9 @@ Copilot Agent then:
 │   ├── parse-testcase/           # Parse a YAML test case definition
 │   │   ├── index.js
 │   │   └── schema.json           # Skill input/output schema
+│   ├── resolve-locator/          # Resolve natural-language targets to Playwright locators
+│   │   ├── index.js
+│   │   └── schema.json
 │   ├── browser-action/           # Execute a single browser step via Playwright
 │   │   ├── index.js
 │   │   └── schema.json
@@ -77,6 +81,7 @@ Copilot Agent then:
 | Skill | Purpose |
 |---|---|
 | `parse-testcase` | Read `tests/cases/<name>.yaml` and return `{ metadata, steps, assertions }` |
+| `resolve-locator` | Convert `target`, `testId`, `label`, `role/name`, or `text` into an executable locator |
 | `browser-action` | Execute one step: `navigate`, `click`, `fill`, `select`, `hover`, `screenshot`, `wait` |
 | `assert` | Evaluate: `url-contains`, `title-equals`, `element-visible`, `element-text`, `element-count`, `attribute-equals` |
 | `log-recorder` | Append a structured entry to the run's log store |
@@ -113,17 +118,24 @@ steps:
   - type: navigate
     url: https://example.com/login
   - type: fill
-    selector: "#username"
+    target: username field
     value: student
   - type: click
-    selector: "#submit"
+    testId: login-submit
 
 assertions:
   - type: url-contains
     expected: /dashboard/
   - type: element-visible
-    selector: ".welcome-message"
+    testId: welcome-message
 ```
+
+Locators can be supplied in several forms:
+
+- `selector` for explicit CSS selectors
+- `testId` for stable `data-testid` attributes
+- `label`, `role` + `name`, `text`, or `placeholder` for semantic locators
+- `target` for natural-language descriptions that are resolved against the live page
 
 ---
 
@@ -131,15 +143,15 @@ assertions:
 
 Copilot's orchestration behaviour is governed by two layers of rules:
 
-- **`.github/copilot-instructions.md`** – concise, always-loaded rules (R-01 through R-08)
-- **`rules/test-orchestration.md`** – full workflow diagram and decision logic
-- **`rules/skill-usage.md`** – input/output reference for each skill
+- **`.github/copilot-instructions.md`** - concise, always-loaded rules
+- **`rules/test-orchestration.md`** - full workflow diagram and decision logic
+- **`rules/skill-usage.md`** - input/output reference for each skill
 
 ---
 
 ## Prerequisites
 
-- Node.js ≥ 18
+- Node.js >= 18
 - GitHub Copilot with Agent mode enabled in your editor
 
 ---

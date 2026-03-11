@@ -32,6 +32,34 @@ AI Browser Testing Lab.
 
 ---
 
+## resolve-locator
+
+**When to use:** Before `browser-action` or `assert` when a step/assertion omits `selector` and relies on semantic or natural-language targeting.
+
+**Input:**
+```json
+{
+  "descriptor": { "type": "fill", "target": "username field", "description": "Enter username" },
+  "context": { "page": "<Playwright Page>" }
+}
+```
+
+**Output:**
+```json
+{
+  "locator": { "testId": "login-username" },
+  "strategy": "inferred:testId",
+  "detail": "Resolved test id \"login-username\" from target \"username field\""
+}
+```
+
+**Notes:**
+- Explicit locator fields win over inference.
+- DOM-based inference works best when the app exposes stable `data-testid` values.
+- `browser-action` and `assert` can also auto-resolve locators internally when given the same descriptor.
+
+---
+
 ## browser-action
 
 **When to use:** Once per step, in order.
@@ -39,27 +67,29 @@ AI Browser Testing Lab.
 **Input:**
 ```json
 {
-  "action": { "type": "click", "selector": "#submit", "timeout": 30000 },
+  "action": { "type": "click", "testId": "login-submit", "timeout": 30000 },
   "context": { "page": "<Playwright Page>" }
 }
 ```
 
 **Output:**
 ```json
-{ "status": "pass", "detail": "Clicked \"#submit\"", "context": { ... } }
+{ "status": "pass", "detail": "Clicked test id \"login-submit\"", "context": { ... } }
 ```
 
 **Supported action types:**
 
-| Type         | Required fields       | Optional fields            |
-|--------------|-----------------------|----------------------------|
-| `navigate`   | `url`                 | `timeout`                  |
-| `click`      | `selector`            | `timeout`                  |
-| `fill`       | `selector`, `value`   | `timeout`                  |
-| `select`     | `selector`, `value`   | `timeout`                  |
-| `hover`      | `selector`            | `timeout`                  |
-| `screenshot` | –                     | `screenshotPath`           |
-| `wait`       | `selector` OR `value` | `timeout`                  |
+| Type         | Required fields            | Optional fields  |
+|--------------|----------------------------|------------------|
+| `navigate`   | `url`                      | `timeout`        |
+| `click`      | locator info               | `timeout`        |
+| `fill`       | locator info, `value`      | `timeout`        |
+| `select`     | locator info, `value`      | `timeout`        |
+| `hover`      | locator info               | `timeout`        |
+| `screenshot` | -                          | `screenshotPath` |
+| `wait`       | locator info OR `value`    | `timeout`        |
+
+Locator info can be provided via `selector`, `testId`, `label`, `role` + `name`, `text`, `placeholder`, a structured `locator` object, or a natural-language `target`.
 
 ---
 
@@ -70,26 +100,26 @@ AI Browser Testing Lab.
 **Input:**
 ```json
 {
-  "assertion": { "type": "url-contains", "expected": "/success/" },
+  "assertion": { "type": "element-visible", "testId": "welcome-message" },
   "context": { "page": "<Playwright Page>" }
 }
 ```
 
 **Output:**
 ```json
-{ "passed": true, "actual": "https://example.com/success/", "expected": "/success/", "message": "..." }
+{ "passed": true, "actual": "true", "expected": "true", "message": "..." }
 ```
 
 **Supported assertion types:**
 
-| Type               | Required fields            |
-|--------------------|----------------------------|
-| `url-contains`     | `expected`                 |
-| `title-equals`     | `expected`                 |
-| `element-visible`  | `selector`                 |
-| `element-text`     | `selector`, `expected`     |
-| `element-count`    | `selector`, `count`        |
-| `attribute-equals` | `selector`, `attribute`, `expected` |
+| Type               | Required fields                     |
+|--------------------|-------------------------------------|
+| `url-contains`     | `expected`                          |
+| `title-equals`     | `expected`                          |
+| `element-visible`  | locator info                        |
+| `element-text`     | locator info, `expected`            |
+| `element-count`    | locator info, `count`               |
+| `attribute-equals` | locator info, `attribute`, `expected` |
 
 ---
 
@@ -102,7 +132,7 @@ AI Browser Testing Lab.
 {
   "event": "browser-action:click",
   "status": "pass",
-  "detail": "Clicked #submit",
+  "detail": "Clicked test id login-submit",
   "logStore": []
 }
 ```
@@ -113,8 +143,7 @@ AI Browser Testing Lab.
 ```
 
 **Notes:**
-- `logStore` is a shared array reference. Pass the same array instance for all
-  calls in a single test run.
+- `logStore` is a shared array reference. Pass the same array instance for all calls in a single test run.
 - `status` must be one of: `pass`, `fail`, `skip`, `info`.
 
 ---

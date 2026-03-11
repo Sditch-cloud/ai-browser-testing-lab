@@ -7,28 +7,28 @@ author: AI Browser Testing Lab
 tags:
   - auth
   - smoke
-baseUrl: https://practicetestautomation.com
+baseUrl: http://localhost:5173
 timeout: 30000
 continueOnFail: false
 
 steps:
   - type: navigate
-    url: https://practicetestautomation.com/practice-test-login/
+    url: http://localhost:5173/login
     description: Open the login page
 
   - type: fill
-    selector: "#username"
-    value: student
+    target: username field
+    value: demo
     description: Enter username
 
   - type: fill
-    selector: "#password"
-    value: Password123
+    target: password field
+    value: 123456
     description: Enter password
 
   - type: click
-    selector: "#submit"
-    description: Click the Submit button
+    target: sign in button
+    description: Click the Sign In button
 
   - type: screenshot
     screenshotPath: reports/login-success.png
@@ -36,15 +36,15 @@ steps:
 
 assertions:
   - type: url-contains
-    expected: /logged-in-successfully/
+    expected: /dashboard
     description: URL should indicate successful login
     continueOnFail: false
 
   - type: element-visible
-    selector: ".post-title"
-    description: Success heading should be visible
+    testId: welcome-message
+    description: Welcome message should be visible
 
   - type: element-text
-    selector: ".post-title"
-    expected: Logged In Successfully
-    description: Heading text should confirm successful login
+    testId: welcome-message
+    expected: Welcome back, Demo User!
+    description: Welcome message should confirm successful login

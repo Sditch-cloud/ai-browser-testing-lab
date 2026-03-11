@@ -1,15 +1,16 @@
-# Copilot Agent Instructions — AI Browser Testing Lab
+# Copilot Agent Instructions - AI Browser Testing Lab
 
 ## Overview
 
 You are a browser-testing orchestrator. When a user asks you to run, validate,
 or inspect a test case, you must coordinate the following skills in order:
 
-1. **parse-testcase** – Locate and parse the test case file.
-2. **browser-action** – Execute every browser step listed in the test case.
-3. **assert** – Evaluate every assertion in the test case after each step.
-4. **log-recorder** – Capture a structured log entry for each action and result.
-5. **report-generator** – Produce a final HTML and JSON report.
+1. **parse-testcase** - Locate and parse the test case file.
+2. **resolve-locator** - Resolve selector-free steps and assertions into executable locators.
+3. **browser-action** - Execute every browser step listed in the test case.
+4. **assert** - Evaluate every assertion in the test case after each step.
+5. **log-recorder** - Capture a structured log entry for each action and result.
+6. **report-generator** - Produce a final HTML and JSON report.
 
 You must **never** hard-code a step sequence or bypass a skill. Every capability
 must be invoked through the skill interface so that the workflow remains
@@ -39,13 +40,18 @@ configurable and auditable.
   (`hooks/on-error.js`) before propagating the failure.
 
 ### R-04  Step Execution
+- If a step omits `selector`, invoke `resolve-locator` first using the original
+  step descriptor and current browser context.
 - Use the `browser-action` skill for every step type:
   `navigate`, `click`, `fill`, `select`, `hover`, `screenshot`, `wait`.
-- Pass the full step object (including `selector`, `value`, `timeout`) to the
-  skill unchanged.
+- Pass the full step object, including locator fields such as `selector`,
+  `testId`, `label`, `role`, `name`, `text`, `placeholder`, `target`, `value`,
+  and `timeout`, to the skill unchanged.
 - Do not mutate step data between parsing and execution.
 
 ### R-05  Assertions
+- If an assertion omits `selector` and uses semantic targeting, invoke
+  `resolve-locator` before `assert`.
 - After each step that has associated assertions, invoke the `assert` skill.
 - The skill receives the current browser state and the assertion descriptor.
 - On failure: record the failure via `log-recorder`, then decide whether to
@@ -53,10 +59,10 @@ configurable and auditable.
 
 ### R-06  Logging
 - Invoke `log-recorder` after every skill call with:
-  - `event` – skill name
-  - `status` – `pass` | `fail` | `skip`
-  - `detail` – human-readable message
-  - `timestamp` – ISO-8601 string
+  - `event` - skill name
+  - `status` - `pass` | `fail` | `skip`
+  - `detail` - human-readable message
+  - `timestamp` - ISO-8601 string
 - Logs are accumulated in memory and flushed to `reports/` by the
   `report-generator` skill.
 
@@ -64,13 +70,13 @@ configurable and auditable.
 - After all steps complete, invoke `report-generator` with the full log array
   and the parsed test case metadata.
 - The skill writes two files to `reports/`:
-  - `<testName>-<timestamp>.json` – machine-readable results
-  - `<testName>-<timestamp>.html` – human-readable report
+  - `<testName>-<timestamp>.json` - machine-readable results
+  - `<testName>-<timestamp>.html` - human-readable report
 - Display a summary (pass/fail counts, report path) to the user in chat.
 
 ### R-08  Copilot Response Format
 - Always respond with a concise status line first:
-  `✅ Test passed` or `❌ Test failed (N failures)`.
+  `Test passed` or `Test failed (N failures)`.
 - Follow with a collapsible summary of each step result.
 - End with the file path of the generated report.
 
@@ -81,6 +87,7 @@ configurable and auditable.
 | Skill | File | Purpose |
 |---|---|---|
 | `parse-testcase` | `skills/parse-testcase/index.js` | Parse YAML test case |
+| `resolve-locator` | `skills/resolve-locator/index.js` | Resolve semantic or natural-language locators |
 | `browser-action` | `skills/browser-action/index.js` | Execute browser step |
 | `assert` | `skills/assert/index.js` | Evaluate assertions |
 | `log-recorder` | `skills/log-recorder/index.js` | Record a log event |

@@ -6,21 +6,23 @@
  * Evaluates a single assertion against the current browser state.
  *
  * Supported assertion types:
- *   url-contains      – current URL contains expected substring
- *   title-equals      – page title equals expected string
- *   element-visible   – element matching selector is visible
- *   element-text      – element text content equals expected string
- *   element-count     – number of elements matching selector equals count
- *   attribute-equals  – attribute value of element equals expected string
+ *   url-contains      - current URL contains expected substring
+ *   title-equals      - page title equals expected string
+ *   element-visible   - element matching selector is visible
+ *   element-text      - element text content equals expected string
+ *   element-count     - number of elements matching selector equals count
+ *   attribute-equals  - attribute value of element equals expected string
  *
  * Usage (invoked by Copilot Agent):
  *   const result = await assert({ assertion, context: { page } });
  */
 
+const { describeLocator, resolveDescriptorLocator } = require('../_shared/locator.js');
+
 /**
  * @param {object} params
  * @param {object} params.assertion - Assertion descriptor (see schema.json)
- * @param {object} params.context   - Must contain { page } – a Playwright Page
+ * @param {object} params.context   - Must contain { page } - a Playwright Page
  * @returns {{ passed: boolean, actual: string, expected: string, message: string }}
  */
 async function assert({ assertion, context }) {
@@ -62,52 +64,50 @@ async function assert({ assertion, context }) {
       }
 
       case 'element-visible': {
-        if (!assertion.selector) throw new Error('assert/element-visible: "selector" is required.');
-        const locator = page.locator(assertion.selector);
-        const visible = await locator.isVisible();
+        const resolved = await resolveDescriptorLocator(assertion, context, { subject: 'element-visible assertion' });
+        const visible = await resolved.handle.isVisible();
         return {
           passed: visible,
           actual: String(visible),
           expected: 'true',
           message: visible
-            ? `Element "${assertion.selector}" is visible`
-            : `Element "${assertion.selector}" is not visible`,
+            ? `Element ${describeLocator(resolved.locator)} is visible`
+            : `Element ${describeLocator(resolved.locator)} is not visible`,
         };
       }
 
       case 'element-text': {
-        if (!assertion.selector) throw new Error('assert/element-text: "selector" is required.');
-        const locator = page.locator(assertion.selector);
-        const text = (await locator.innerText()).trim();
+        const resolved = await resolveDescriptorLocator(assertion, context, { subject: 'element-text assertion' });
+        const text = (await resolved.handle.innerText()).trim();
         const passed = text === assertion.expected;
         return {
           passed,
           actual: text,
           expected: assertion.expected,
           message: passed
-            ? `Element "${assertion.selector}" has text "${assertion.expected}"`
+            ? `Element ${describeLocator(resolved.locator)} has text "${assertion.expected}"`
             : `Expected text "${assertion.expected}" but got "${text}"`,
         };
       }
 
       case 'element-count': {
-        if (!assertion.selector) throw new Error('assert/element-count: "selector" is required.');
-        const count = await page.locator(assertion.selector).count();
+        const resolved = await resolveDescriptorLocator(assertion, context, { subject: 'element-count assertion' });
+        const count = await resolved.handle.count();
         const passed = count === assertion.count;
         return {
           passed,
           actual: String(count),
           expected: String(assertion.count),
           message: passed
-            ? `Found ${count} element(s) matching "${assertion.selector}"`
-            : `Expected ${assertion.count} element(s) matching "${assertion.selector}" but found ${count}`,
+            ? `Found ${count} element(s) matching ${describeLocator(resolved.locator)}`
+            : `Expected ${assertion.count} element(s) matching ${describeLocator(resolved.locator)} but found ${count}`,
         };
       }
 
       case 'attribute-equals': {
-        if (!assertion.selector) throw new Error('assert/attribute-equals: "selector" is required.');
         if (!assertion.attribute) throw new Error('assert/attribute-equals: "attribute" is required.');
-        const value = await page.locator(assertion.selector).getAttribute(assertion.attribute);
+        const resolved = await resolveDescriptorLocator(assertion, context, { subject: 'attribute-equals assertion' });
+        const value = await resolved.handle.getAttribute(assertion.attribute);
         const passed = value === assertion.expected;
         return {
           passed,

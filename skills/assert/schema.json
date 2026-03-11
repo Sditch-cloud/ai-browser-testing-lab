@@ -15,7 +15,27 @@
             "enum": ["url-contains", "title-equals", "element-visible", "element-text", "element-count", "attribute-equals"],
             "description": "Type of assertion to evaluate"
           },
-          "selector": { "type": "string", "description": "CSS selector (required for element assertions)" },
+          "selector": { "type": "string", "description": "CSS selector" },
+          "testId": { "type": "string", "description": "Stable data-testid value" },
+          "label": { "type": "string", "description": "Associated form label text" },
+          "role": { "type": "string", "description": "ARIA role for role-based lookup" },
+          "name": { "type": "string", "description": "Accessible name for role-based lookup" },
+          "text": { "type": "string", "description": "Visible text to locate" },
+          "placeholder": { "type": "string", "description": "Placeholder text to locate" },
+          "target": { "type": "string", "description": "Natural-language target description for locator resolution" },
+          "locator": {
+            "type": "object",
+            "description": "Optional structured locator object",
+            "properties": {
+              "selector": { "type": "string" },
+              "testId": { "type": "string" },
+              "label": { "type": "string" },
+              "role": { "type": "string" },
+              "name": { "type": "string" },
+              "text": { "type": "string" },
+              "placeholder": { "type": "string" }
+            }
+          },
           "expected": { "type": "string", "description": "Expected value" },
           "count": { "type": "number", "description": "Expected element count (for element-count)" },
           "attribute": { "type": "string", "description": "Attribute name (for attribute-equals)" },

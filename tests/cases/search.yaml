@@ -7,13 +7,13 @@ author: AI Browser Testing Lab
 tags:
   - search
   - smoke
-baseUrl: https://practicetestautomation.com
+baseUrl: http://localhost:5173
 timeout: 30000
 continueOnFail: true
 
 steps:
   - type: navigate
-    url: https://practicetestautomation.com/
+    url: http://localhost:5173/
     description: Open the home page
 
   - type: click
