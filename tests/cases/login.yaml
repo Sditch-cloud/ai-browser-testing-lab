@@ -1,0 +1,50 @@
+# Test Case: Login
+# Triggered via Copilot Chat: "Run the login test case"
+
+name: login
+description: Verify that a user can log in with valid credentials
+author: AI Browser Testing Lab
+tags:
+  - auth
+  - smoke
+baseUrl: https://practicetestautomation.com
+timeout: 30000
+continueOnFail: false
+
+steps:
+  - type: navigate
+    url: https://practicetestautomation.com/practice-test-login/
+    description: Open the login page
+
+  - type: fill
+    selector: "#username"
+    value: student
+    description: Enter username
+
+  - type: fill
+    selector: "#password"
+    value: Password123
+    description: Enter password
+
+  - type: click
+    selector: "#submit"
+    description: Click the Submit button
+
+  - type: screenshot
+    screenshotPath: reports/login-success.png
+    description: Capture post-login screenshot
+
+assertions:
+  - type: url-contains
+    expected: /logged-in-successfully/
+    description: URL should indicate successful login
+    continueOnFail: false
+
+  - type: element-visible
+    selector: ".post-title"
+    description: Success heading should be visible
+
+  - type: element-text
+    selector: ".post-title"
+    expected: Logged In Successfully
+    description: Heading text should confirm successful login

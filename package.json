@@ -1,0 +1,24 @@
+{
+  "name": "ai-browser-testing-lab",
+  "version": "1.0.0",
+  "description": "AI-driven browser testing lab orchestrated by GitHub Copilot Agent using Skills, Hooks, and Rules.",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test:skills": "node tests/skills.test.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "playwright": "^1.55.1"
+  },
+  "keywords": [
+    "copilot",
+    "browser-testing",
+    "playwright",
+    "ai-agent",
+    "skills"
+  ],
+  "license": "MIT"
+}

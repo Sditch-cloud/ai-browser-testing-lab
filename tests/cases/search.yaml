@@ -1,0 +1,48 @@
+# Test Case: Search
+# Triggered via Copilot Chat: "Run the search test case"
+
+name: search
+description: Verify that the search feature returns relevant results
+author: AI Browser Testing Lab
+tags:
+  - search
+  - smoke
+baseUrl: https://practicetestautomation.com
+timeout: 30000
+continueOnFail: true
+
+steps:
+  - type: navigate
+    url: https://practicetestautomation.com/
+    description: Open the home page
+
+  - type: click
+    selector: ".search-toggle"
+    description: Open the search bar
+
+  - type: fill
+    selector: "input[type='search']"
+    value: login
+    description: Type search query
+
+  - type: click
+    selector: ".search-submit"
+    description: Submit the search
+
+  - type: screenshot
+    screenshotPath: reports/search-results.png
+    description: Capture search results screenshot
+
+assertions:
+  - type: url-contains
+    expected: "?s=login"
+    description: URL should reflect the search query
+
+  - type: element-visible
+    selector: ".search-results, article"
+    description: Search results container should be visible
+
+  - type: element-count
+    selector: "article"
+    count: 1
+    description: Exactly one result article should be present on the first page
