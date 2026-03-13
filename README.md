@@ -1,29 +1,28 @@
 # AI Browser Testing Lab
 
-An AI-driven browser testing project orchestrated entirely by **GitHub Copilot Agent** using **Skills**, **Hooks**, and **Rules** - no fixed test-runner script.
+An AI-driven browser testing project with AI-facing tools, a modular Node.js runner, and a CLI backend.
 
 ---
 
 ## How it works
 
-Instead of a traditional CI script that runs tests in sequence, this lab defines atomic **Skills** that Copilot Agent can call, **Rules** that tell it *how* to orchestrate those calls, and **Hooks** that handle lifecycle events. The workflow is triggered directly from **Copilot Chat**.
+For AI-driven automated execution, use the public tools under `tools/runner/`.
+
+See runner internal conventions: `runner/INTERNAL_NAMING.md`
+
+Planned AI-facing tool wrapper:
+- `tools/runner/run-test-case.js` (not yet present in this workspace)
+
+Runtime backend:
+- `runner/cli.js`
+
+AI should not depend on internal implementation details under `runner/`.
 
 ### Example
 
 > **User:** "Run the login test case"
 
-Copilot Agent then:
-
-1. Searches `tests/cases/` for `login.yaml` -> invokes **parse-testcase** skill
-2. Fires the **before-test** hook -> launches a Playwright browser
-3. Resolves selector-free steps and assertions with **resolve-locator** when needed
-4. Iterates over each step -> invokes **browser-action** skill
-5. After each step -> invokes **assert** skill for any associated assertions
-6. After each skill call -> invokes **log-recorder** skill to accumulate results
-7. On any error -> fires the **on-error** hook (screenshot + decide abort/continue)
-8. Fires the **after-test** hook -> closes the browser
-9. Invokes **report-generator** -> writes `reports/<name>-<timestamp>.html` and `.json`
-10. Replies to the user with a pass/fail summary and the report file path
+AI invokes the public runner tool, which calls `runner/cli.js` and returns summary plus report paths.
 
 ---
 
@@ -34,40 +33,59 @@ Copilot Agent then:
 ├── .github/
 │   └── copilot-instructions.md   # Rules that govern how Copilot orchestrates tests
 │
-├── skills/
-│   ├── parse-testcase/           # Parse a YAML test case definition
-│   │   ├── index.js
-│   │   └── schema.json           # Skill input/output schema
-│   ├── resolve-locator/          # Resolve natural-language targets to Playwright locators
-│   │   ├── index.js
-│   │   └── schema.json
-│   ├── browser-action/           # Execute a single browser step via Playwright
-│   │   ├── index.js
-│   │   └── schema.json
-│   ├── assert/                   # Evaluate an assertion against browser state
-│   │   ├── index.js
-│   │   └── schema.json
-│   ├── log-recorder/             # Record a structured log entry
-│   │   ├── index.js
-│   │   └── schema.json
-│   └── report-generator/         # Write HTML + JSON reports
-│       ├── index.js
-│       └── schema.json
-│
-├── hooks/
-│   ├── before-test.js            # Launch browser before first step
-│   ├── after-test.js             # Close browser after last step
-│   └── on-error.js               # Capture screenshot + decide abort/continue
+├── runner/
+│   ├── lifecycle/
+│   │   ├── before-test.js        # Launch browser before first step
+│   │   ├── after-test.js         # Close browser after last step
+│   │   └── on-error.js           # Capture screenshot + decide abort/continue
+│   ├── _lib/
+│   │   ├── browser/              # Atomic browser operations (navigate/click/fill/...)
+│   │   ├── assertion/            # Atomic assertion operations
+│   │   ├── locator/              # Locator resolution primitives
+│   │   ├── io/                   # YAML/JSON/HTML IO primitives
+│   │   ├── log/                  # Log append primitive
+│   │   └── shared/               # Shared low-level helpers (locator-utils)
+│   ├── tools/
+│   │   └── index.js              # Internal boundary over low-level _lib modules
+│   ├── reporters/
+│   │   ├── index.js              # JSON + HTML report orchestration
+│   │   ├── json-reporter.js      # Machine-readable report writer
+│   │   ├── html-reporter.js      # Human-readable report writer
+│   │   └── utils.js              # Shared reporter helpers
+│   ├── execution/
+│   │   ├── resolve-descriptor-locator.js  # Shared locator preparation for steps/assertions
+│   │   ├── run-step.js            # Deterministic step execution pipeline
+│   │   └── run-assertions.js      # Assertion execution pipeline
+│   ├── helpers/
+│   │   ├── locator-utils.js       # Locator resolution helpers
+│   │   ├── metadata-utils.js      # Metadata merge helpers
+│   │   ├── navigation-utils.js    # Navigate URL normalization helpers
+│   │   ├── path-utils.js          # Output and test naming helpers
+│   │   ├── log-summary.js         # Runner summary helpers
+│   │   └── index.js               # Convenience helper exports
+│   ├── orchestration/
+│   │   └── test-runner.js         # End-to-end test orchestrator
+│   ├── runtime/
+│   │   ├── create-runtime-state.js        # Per-run mutable state factory
+│   │   ├── create-runner-dependencies.js  # Internal dependency assembly
+│   │   └── parse-test-case.js             # YAML test case loading and normalization
+│   ├── cli.js                    # CLI entry point for local execution
+│   ├── index.js                  # Public runner exports
+│   └── _services/
+│       ├── assertion-executor/   # Assertion adapter over assertion tools
+│       ├── log-recorder/         # Structured run log adapter
+│       └── step-action-executor/ # Step action adapter over browser tools
 │
 ├── tests/
 │   ├── cases/
 │   │   ├── login.yaml            # Login test case definition
 │   │   └── search.yaml           # Search test case definition
-│   └── skills.test.js            # Unit tests for skills (no browser required)
+│   ├── ai-tools.test.js          # Public AI-facing tool wrapper tests
+│   └── runner.test.js            # Runner and CLI tests with injected fakes
 │
 ├── rules/
-│   ├── test-orchestration.md     # Detailed workflow diagram and decision logic
-│   └── skill-usage.md            # Input/output reference for each skill
+│   ├── test-orchestration.md     # Orchestration rules placeholder (TBD)
+│   └── skill-usage.md            # Skill conventions placeholder (TBD)
 │
 ├── reports/                      # Generated reports (gitignored except .gitkeep)
 ├── package.json
@@ -78,26 +96,26 @@ Copilot Agent then:
 
 ## Skills
 
-| Skill | Purpose |
-|---|---|
-| `parse-testcase` | Read `tests/cases/<name>.yaml` and return `{ metadata, steps, assertions }` |
-| `resolve-locator` | Convert `target`, `testId`, `label`, `role/name`, or `text` into an executable locator |
-| `browser-action` | Execute one step: `navigate`, `click`, `fill`, `select`, `hover`, `screenshot`, `wait` |
-| `assert` | Evaluate: `url-contains`, `title-equals`, `element-visible`, `element-text`, `element-count`, `attribute-equals` |
-| `log-recorder` | Append a structured entry to the run's log store |
-| `report-generator` | Write `<name>-<ts>.html` and `<name>-<ts>.json` to `reports/` |
+Reserved for future implementation details.
 
-Each skill lives in `skills/<name>/index.js` and is described by a JSON schema in `skills/<name>/schema.json`.
+TBD
+
+---
+
+## Tools
+
+Public AI-facing tools are planned under `tools/`.
+
+Planned public tool:
+- `tools/runner/run-test-case.js`: wraps `runner/cli.js` for AI-safe test execution
 
 ---
 
 ## Hooks
 
-| Hook | File | Trigger |
-|---|---|---|
-| `before-test` | `hooks/before-test.js` | Before the first browser step |
-| `after-test` | `hooks/after-test.js` | After the last browser step (always fires) |
-| `on-error` | `hooks/on-error.js` | When a step throws an unhandled exception |
+Reserved for future implementation details.
+
+TBD
 
 ---
 
@@ -106,13 +124,14 @@ Each skill lives in `skills/<name>/index.js` and is described by a JSON schema i
 Test cases are YAML files in `tests/cases/`. Example structure:
 
 ```yaml
-name: login
-description: Verify user can log in with valid credentials
-author: AI Browser Testing Lab
-tags: [auth, smoke]
-baseUrl: https://example.com
-timeout: 30000
-continueOnFail: false
+metadata:
+  name: login
+  description: Verify user can log in with valid credentials
+  author: AI Browser Testing Lab
+  tags: [auth, smoke]
+  baseUrl: https://example.com
+  timeout: 30000
+  continueOnFail: false
 
 steps:
   - type: navigate
@@ -137,15 +156,15 @@ Locators can be supplied in several forms:
 - `label`, `role` + `name`, `text`, or `placeholder` for semantic locators
 - `target` for natural-language descriptions that are resolved against the live page
 
+The parser also remains backward-compatible with the existing flat YAML shape used in `tests/cases/*.yaml`, so you do not need to rewrite current cases.
+
 ---
 
 ## Rules
 
-Copilot's orchestration behaviour is governed by two layers of rules:
+Current rule is simple: AI invokes tests through `tools/runner/`, and those tools delegate to `runner/cli.js`.
 
-- **`.github/copilot-instructions.md`** - concise, always-loaded rules
-- **`rules/test-orchestration.md`** - full workflow diagram and decision logic
-- **`rules/skill-usage.md`** - input/output reference for each skill
+Detailed lifecycle/internal-service/internal-library conventions are reserved for later and are currently TBD.
 
 ---
 
@@ -162,14 +181,41 @@ Copilot's orchestration behaviour is governed by two layers of rules:
 npm install
 ```
 
----
-
-## Running the skill unit tests
-
-The skills can be exercised without a live browser:
+## Running a test from the CLI
 
 ```bash
-npm run test:skills
+npm run run:test -- login
+```
+
+You can also target a file path directly:
+
+```bash
+node runner/cli.js tests/cases/search.yaml --headed --report-dir reports
+```
+
+Supported options:
+
+- `--case-dir <dir>` to override the default `tests/cases` search directory
+- `--report-dir <dir>` to override the output folder for HTML and JSON reports
+- `--base-url <url>` to override `metadata.baseUrl`
+- `--timeout <ms>` to override `metadata.timeout`
+- `--headless` or `--headed` to control browser mode
+- `--slow-mo <ms>` to add Playwright delay for debugging
+
+---
+
+## Running the runner unit tests
+
+Run the runner and CLI tests:
+
+```bash
+npm run test:runner
+```
+
+Run the AI-facing tool wrapper tests:
+
+```bash
+npm run test:ai-tools
 ```
 
 ---
@@ -181,4 +227,4 @@ npm run test:skills
    - `Run the login test case`
    - `Execute the search test`
    - `Run all smoke tests`
-3. Copilot Agent will orchestrate the full workflow as described above.
+3. Copilot Agent executes through the public tool wrapper in `tools/runner/`, which delegates to `runner/cli.js`.

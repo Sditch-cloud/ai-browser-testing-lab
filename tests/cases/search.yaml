@@ -2,7 +2,7 @@
 # Triggered via Copilot Chat: "Run the search test case"
 
 name: search
-description: Verify that the search feature returns relevant results
+description: Verify that user search returns the expected filtered result
 author: AI Browser Testing Lab
 tags:
   - search
@@ -13,36 +13,59 @@ continueOnFail: true
 
 steps:
   - type: navigate
-    url: http://localhost:5173/
-    description: Open the home page
-
-  - type: click
-    selector: ".search-toggle"
-    description: Open the search bar
+    url: /login
+    description: Open the login page
 
   - type: fill
-    selector: "input[type='search']"
-    value: login
-    description: Type search query
+    testId: login-username
+    value: demo
+    description: Enter username
+
+  - type: fill
+    testId: login-password
+    value: 123456
+    description: Enter password
 
   - type: click
-    selector: ".search-submit"
-    description: Submit the search
+    testId: login-submit
+    description: Sign in
+
+  - type: wait
+    testId: welcome-message
+    description: Wait for the dashboard welcome message
+
+  - type: click
+    testId: nav-users
+    description: Open the users page
+
+  - type: wait
+    testId: user-search
+    description: Wait for the user search field
+
+  - type: fill
+    testId: user-search
+    value: Alice
+    description: Filter users by name
 
   - type: screenshot
     screenshotPath: reports/search-results.png
-    description: Capture search results screenshot
+    description: Capture filtered search results
 
 assertions:
   - type: url-contains
-    expected: "?s=login"
-    description: URL should reflect the search query
+    expected: /users
+    description: URL should reflect the users page
 
   - type: element-visible
-    selector: ".search-results, article"
-    description: Search results container should be visible
+    testId: user-search
+    description: Search input should remain visible
+
+  - type: element-text
+    testId: table-cell-name-0
+    expected: Alice Johnson
+    description: First filtered result should be Alice Johnson
 
   - type: element-count
-    selector: "article"
+    selector: "tbody [data-testid^='table-row-']"
     count: 1
-    description: Exactly one result article should be present on the first page
+    description: Exactly one user row should remain after filtering

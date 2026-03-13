@@ -7,7 +7,13 @@
     "node": ">=18"
   },
   "scripts": {
-    "test:skills": "node tests/skills.test.js"
+    "test:ai-tools": "node tests/ai-tools.test.js",
+    "test:runner": "node tests/runner.test.js",
+    "run:test": "node runner/cli.js",
+    "postinstall": "playwright install chromium"
+  },
+  "bin": {
+    "ai-test-runner": "runner/cli.js"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",

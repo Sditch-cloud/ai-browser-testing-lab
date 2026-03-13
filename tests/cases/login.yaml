@@ -30,6 +30,10 @@ steps:
     target: sign in button
     description: Click the Sign In button
 
+  - type: wait
+    testId: welcome-message
+    description: Wait for the dashboard welcome message
+
   - type: screenshot
     screenshotPath: reports/login-success.png
     description: Capture post-login screenshot
