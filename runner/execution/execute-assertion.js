@@ -1,6 +1,6 @@
 'use strict';
 
-const tools = require('../../tools');
+const tools = require('../tools');
 
 /**
  * Executes one assertion against the current Playwright page and normalizes
@@ -13,10 +13,10 @@ const tools = require('../../tools');
  */
 async function executeAssertion({ assertion, context }) {
   if (!assertion || !assertion.type) {
-    throw new Error('assertion-executor: "assertion.type" is required.');
+    throw new Error('executeAssertion: "assertion.type" is required.');
   }
   if (!context || !context.page) {
-    throw new Error('assertion-executor: "context.page" must be a live Playwright Page object.');
+    throw new Error('executeAssertion: "context.page" must be a live Playwright Page object.');
   }
 
   const { page } = context;
@@ -24,7 +24,7 @@ async function executeAssertion({ assertion, context }) {
   try {
     const assertionHandler = tools.assertion[assertion.type];
     if (!assertionHandler) {
-      throw new Error(`assertion-executor: Unknown assertion type "${assertion.type}".`);
+      throw new Error(`executeAssertion: Unknown assertion type "${assertion.type}".`);
     }
 
     return await assertionHandler({ assertion, context: { page } });
@@ -38,6 +38,4 @@ async function executeAssertion({ assertion, context }) {
   }
 }
 
-module.exports = {
-  executeAssertion,
-};
+module.exports = { executeAssertion };

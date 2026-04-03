@@ -1,6 +1,6 @@
 'use strict';
 
-const tools = require('../../tools');
+const tools = require('../tools');
 
 /**
  * Executes a single browser step against the active Playwright page.
@@ -14,16 +14,16 @@ const tools = require('../../tools');
  */
 async function executeStepAction({ action, context }) {
   if (!action || !action.type) {
-    throw new Error('step-action-executor: "action.type" is required.');
+    throw new Error('executeStepAction: "action.type" is required.');
   }
   if (!context || !context.page) {
-    throw new Error('step-action-executor: "context.page" must be a live Playwright Page object.');
+    throw new Error('executeStepAction: "context.page" must be a live Playwright Page object.');
   }
 
   try {
     const actionHandler = tools.browser[action.type];
     if (!actionHandler) {
-      throw new Error(`step-action-executor: Unknown action type "${action.type}".`);
+      throw new Error(`executeStepAction: Unknown action type "${action.type}".`);
     }
 
     return await actionHandler({ action, context });
@@ -32,6 +32,4 @@ async function executeStepAction({ action, context }) {
   }
 }
 
-module.exports = {
-  executeStepAction,
-};
+module.exports = { executeStepAction };

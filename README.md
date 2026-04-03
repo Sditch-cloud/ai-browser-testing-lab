@@ -8,7 +8,8 @@ An AI-driven browser testing project with AI-facing tools, a modular Node.js run
 
 For AI-driven automated execution, use the public tools under `tools/runner/`.
 
-See runner internal conventions: `runner/INTERNAL_NAMING.md`
+See runner architecture: `runner/ARCHITECTURE.md`
+See internal naming conventions: `runner/INTERNAL_NAMING.md`
 
 Planned AI-facing tool wrapper:
 - `tools/runner/run-test-case.js` (not yet present in this workspace)
@@ -38,24 +39,27 @@ AI invokes the public runner tool, which calls `runner/cli.js` and returns summa
 │   │   ├── before-test.js        # Launch browser before first step
 │   │   ├── after-test.js         # Close browser after last step
 │   │   └── on-error.js           # Capture screenshot + decide abort/continue
-│   ├── _lib/
+│   ├── tools/
+│   │   ├── index.js              # Single import boundary for all low-level modules
 │   │   ├── browser/              # Atomic browser operations (navigate/click/fill/...)
-│   │   ├── assertion/            # Atomic assertion operations
-│   │   ├── locator/              # Locator resolution primitives
+│   │   ├── assertion/            # Atomic assertion handlers, keyed by type string
+│   │   ├── locator/              # Locator resolution engine
 │   │   ├── io/                   # YAML/JSON/HTML IO primitives
 │   │   ├── log/                  # Log append primitive
 │   │   └── shared/               # Shared low-level helpers (locator-utils)
-│   ├── tools/
-│   │   └── index.js              # Internal boundary over low-level _lib modules
 │   ├── reporters/
 │   │   ├── index.js              # JSON + HTML report orchestration
 │   │   ├── json-reporter.js      # Machine-readable report writer
 │   │   ├── html-reporter.js      # Human-readable report writer
 │   │   └── utils.js              # Shared reporter helpers
 │   ├── execution/
+│   │   ├── run-step.js                    # Deterministic step execution pipeline
+│   │   ├── run-assertions.js              # Assertion execution pipeline
 │   │   ├── resolve-descriptor-locator.js  # Shared locator preparation for steps/assertions
-│   │   ├── run-step.js            # Deterministic step execution pipeline
-│   │   └── run-assertions.js      # Assertion execution pipeline
+│   │   ├── resolve-locator.js             # Adapter: calls tools.locator.resolve
+│   │   ├── execute-step-action.js         # Adapter: dispatches to tools.browser[type]
+│   │   ├── execute-assertion.js           # Adapter: dispatches to tools.assertion[type]
+│   │   └── record-log.js                  # Appends a structured entry to logStore
 │   ├── helpers/
 │   │   ├── locator-utils.js       # Locator resolution helpers
 │   │   ├── metadata-utils.js      # Metadata merge helpers
@@ -71,10 +75,8 @@ AI invokes the public runner tool, which calls `runner/cli.js` and returns summa
 │   │   └── parse-test-case.js             # YAML test case loading and normalization
 │   ├── cli.js                    # CLI entry point for local execution
 │   ├── index.js                  # Public runner exports
-│   └── _services/
-│       ├── assertion-executor/   # Assertion adapter over assertion tools
-│       ├── log-recorder/         # Structured run log adapter
-│       └── step-action-executor/ # Step action adapter over browser tools
+│   ├── ARCHITECTURE.md           # Full architecture reference
+│   └── INTERNAL_NAMING.md        # Internal naming conventions
 │
 ├── tests/
 │   ├── cases/

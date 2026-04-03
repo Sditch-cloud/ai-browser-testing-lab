@@ -2,9 +2,9 @@
 
 const { resolveLocator } = require('../execution/resolve-locator');
 const { parseTestCase } = require('./parse-test-case');
-const { executeStepAction } = require('../_services/step-action-executor');
-const { executeAssertion } = require('../_services/assertion-executor');
-const { logRecorder } = require('../_services/log-recorder');
+const { executeStepAction } = require('../execution/execute-step-action');
+const { executeAssertion } = require('../execution/execute-assertion');
+const { recordLog } = require('../execution/record-log');
 const { beforeTest } = require('../lifecycle/before-test');
 const { afterTest } = require('../lifecycle/after-test');
 const { onError } = require('../lifecycle/on-error');
@@ -29,7 +29,7 @@ function createRunnerDependencies(customDependencies = {}) {
       resolveLocator: customSkills.resolveLocator || resolveLocator,
       executeStepAction: customSkills.executeStepAction || customSkills.browserAction || executeStepAction,
       executeAssertion: customSkills.executeAssertion || customSkills.assert || executeAssertion,
-      recordLog: customSkills.recordLog || customSkills.logRecorder || logRecorder,
+      recordLog: customSkills.recordLog || customSkills.logRecorder || recordLog,
     },
     hooks: {
       beforeTest: customHooks.beforeTest || beforeTest,
